@@ -2,7 +2,7 @@ import java.util.*;
 
 public class NeuralNetMain {
     public static void main(String[] args) {
-        int inputA = 0; /* switch to -1 in bipolar input set
+        int inputA = -1; /* switch to -1 in bipolar input set
                            switch to 0 in binary input set */
         int inputB = 1;
         int inputNum = 2;
@@ -11,19 +11,19 @@ public class NeuralNetMain {
         int epochTotal = 0;
         int epochAvg; // average number of epochs that is needed to satisfy the accept error
         double learningRate = 0.2;
-        double momentum = 0.0;
+        double momentum = 0.9;
         double acceptError = 0.05;
 
         /* switch between binary test and bipolar test here */
-        String dataType = "Binary";
-//        String dataType = "Bipolar";
+//        String dataType = "Binary";
+        String dataType = "Bipolar";
 
         /* also switch between binary test and bipolar test here */
-        double[][] binaryInput = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
-        double[] binaryExpectedOutput = {0, 1, 1, 0};
+//        double[][] binaryInput = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
+//        double[] binaryExpectedOutput = {0, 1, 1, 0};
 
-//        double[][] bipolarInput = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
-//        double[] bipolarExpectedOutput = {-1, 1, 1, -1};
+        double[][] bipolarInput = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
+        double[] bipolarExpectedOutput = {-1, 1, 1, -1};
 
         /* Enter the total number of trials*/
         Scanner scanner = new Scanner(System.in);
@@ -44,8 +44,8 @@ public class NeuralNetMain {
                 errorRate = 0.0;
                 /* The for loop indicates the algorithm for one epoch */
                 for(int index = 0; index < hiddenNum; index += 1){
-                    double[] input = binaryInput[index]; // switch between binary test and bipolar test here
-                    double output = binaryExpectedOutput[index]; //switch between binary test and bipolar test here
+                    double[] input = bipolarInput[index]; // switch between binary test and bipolar test here
+                    double output = bipolarExpectedOutput[index]; //switch between binary test and bipolar test here
                     errorRate += robot.train(input,output);
                 }
                 epoch += 1;

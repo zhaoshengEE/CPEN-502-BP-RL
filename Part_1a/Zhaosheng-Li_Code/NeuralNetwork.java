@@ -11,6 +11,7 @@ public class NeuralNetwork {
     private double learningRate;
     private double momentum;
     private double errorRate;
+    private double sum; //used when calculating the delta signals in the hidden neurons
     private String dataType;
 
     double randomRangeMax = 0.5;
@@ -83,7 +84,8 @@ public class NeuralNetwork {
     public double train(double [] X, double argValue){
         double trainOutput = outputFor(X); // Forward Propagation
         updateWeight(trainOutput, argValue); // Back Propagation
-        return errorRate = 0.5 * Math.pow((trainOutput - argValue), 2);
+        errorRate = 0.5 * Math.pow((trainOutput - argValue), 2);
+        return errorRate;
     }
 
     public double outputFor(double [] X){
@@ -132,22 +134,25 @@ public class NeuralNetwork {
         // update hidden-to-output weights
         for(int h = 0; h < outputNum; h += 1) {
             for (int k = 0; k <= hiddenNum; k += 1) {
-                hiddenWeight[k][h] +=  (momentum * hiddenWeightDelta[k][h]) + (learningRate * deltaOutput[0] * hiddenNeuron[k]);
-                hiddenWeightDelta[k][h] = (momentum * hiddenWeightDelta[k][h]) + (learningRate * deltaOutput[0] * hiddenNeuron[k]);
+                hiddenWeight[k][h] +=  (momentum * hiddenWeightDelta[k][h]) + (learningRate * deltaOutput[h] * hiddenNeuron[k]);
+                hiddenWeightDelta[k][h] = (momentum * hiddenWeightDelta[k][h]) + (learningRate * deltaOutput[h] * hiddenNeuron[k]);
             }
         }
 
         // deltaHidden[0] - deltaHidden[3] are the delta signals in the hidden neurons
        for(int k = 0; k < hiddenNum; k += 1){
-           for(int h = 0; h < outputNum; h += 1){
-               deltaHidden[k] = deltaOutput[h] * hiddenWeight[k][h];
-           }
+           sum = 0;
            if (dataType.equals("Binary")){
-               deltaHidden[k] *= hiddenNeuron[k] * (1 - hiddenNeuron[k]);
+               deltaHidden[k] = hiddenNeuron[k] * (1 - hiddenNeuron[k]);
            }
            else if (dataType.equals("Bipolar")){
-               deltaHidden[k] *= 0.5 * (1 - Math.pow(hiddenNeuron[k], 2));
+               deltaHidden[k] = 0.5 * (1 - Math.pow(hiddenNeuron[k], 2));
            }
+
+           for(int h = 0; h < outputNum; h += 1){
+               sum += deltaOutput[h] * hiddenWeight[k][h];
+           }
+           deltaHidden[k] *= sum;
        }
 
         // update input-to-hidden weights

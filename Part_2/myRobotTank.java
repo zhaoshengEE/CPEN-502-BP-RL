@@ -39,32 +39,32 @@ public class myRobotTank extends AdvancedRobot{
     public double xCentre;
     public double yCentre;
 
-    public static boolean intermediate = true; /* true: Take instantBonus and instantPenalty into account
+    public static boolean intermediate = false; /* true: Take intermediateBonus and intermediatePenalty into account
                                                   false: Only consider the terminalBonus and terminalPenalty */
     public static boolean onPolicy = false; /* true: on-policy
                                               false: off-policy */
-    private double gamma = 0.8; // discount factor
-    private double alpha = 0.3; // learning rate
+    private double gamma = 0.9; // discount factor
+    private double alpha = 0.1; // learning rate
     private double epsilon = 0.0; // random number for epsilon-greedy policy (i.e. exploration rate)
 
     /* Bonus and Penalty */
-    private final double instantBonus = 3.0;
-    private final double terminalBonus = 5.0;
-    private final double instantPenalty = 2.0;
-    private final double terminalPenalty = 4.0;
+    private final double intermediateBonus = 1.0;
+    private final double terminalBonus = 2.0;
+    private final double intermediatePenalty = -0.25;
+    private final double terminalPenalty = -0.5;
 
     static int totalRound = 0; // the maximum should be 7000 rounds
     static int winRound = 0;
-    static int numRoundsTo100 = 0; // compute the winning rate every 100 rounds
+    static int numRoundsTo20 = 0; // compute the winning rate every 100 rounds
     static double winningRate = 0.0;
-    public static double reward;
+    public static double reward = 0.0;
     public static int currentActionIndex;
     public double Q = 0.0;
 
     static String logFilename = "myRobotTank-logfile.log";
     static LogFile log = null;
 
-    private static LookUpTable LUT = new LookUpTable(
+    static LookUpTable LUT = new LookUpTable(
             enumHP.values().length,         // my robot tank's energy
             enumHP.values().length,         // enemy robot tank's energy
             enumDistance.values().length,   // distance to enemy
@@ -87,9 +87,9 @@ public class myRobotTank extends AdvancedRobot{
             log.stream.printf("gamma,   %2.2f\n", gamma);
             log.stream.printf("alpha,   %2.2f\n", alpha);
             log.stream.printf("epsilon, %2.2f\n", epsilon);
-            log.stream.printf("badInstantReward, %2.2f\n", instantPenalty);
+            log.stream.printf("badIntermediateReward, %2.2f\n", intermediatePenalty);
             log.stream.printf("badTerminalReward, %2.2f\n", terminalPenalty);
-            log.stream.printf("goodInstantReward, %2.2f\n", instantBonus);
+            log.stream.printf("goodIntermediateReward, %2.2f\n", intermediateBonus);
             log.stream.printf("goodTerminalReward, %2.2f\n\n", terminalBonus);
         }
 
@@ -98,7 +98,7 @@ public class myRobotTank extends AdvancedRobot{
             switch (operationMode){
                 case scan: {
                     reward = 0.0;
-                    turnRadarLeft(90);
+                    turnRadarLeft(180);
                     break;
                 }
                 case performAction: {
@@ -244,28 +244,28 @@ public class myRobotTank extends AdvancedRobot{
 
     @Override
     public void onHitByBullet(HitByBulletEvent e){
-        if(intermediate) reward -= instantPenalty;
+        if(intermediate) reward = intermediatePenalty;
     }
 
     @Override
     public void onBulletHit(BulletHitEvent e){
-        if(intermediate) reward += instantBonus;
+        if(intermediate) reward = intermediateBonus;
     }
 
     @Override
     public void onBulletMissed(BulletMissedEvent e){
-        if(intermediate) reward -= instantPenalty;
+        if(intermediate) reward = intermediatePenalty;
     }
 
     @Override
     public void onHitWall(HitWallEvent e){
-        if(intermediate) reward -= instantPenalty;
+        if(intermediate) reward = intermediatePenalty;
     }
 
     @Override
     public void onWin(WinEvent e){
         saveTable();
-        reward += terminalBonus;
+        reward = terminalBonus;
         double[] indexes = new double []{
                 previousMyHp.ordinal(),
                 previousEnemyHp.ordinal(),
@@ -275,16 +275,16 @@ public class myRobotTank extends AdvancedRobot{
         Q = computeQ(reward, onPolicy);
         LUT.setQValue(indexes, Q);
 
-        if(numRoundsTo100 < 100){
-            numRoundsTo100 += 1;
+        if(numRoundsTo20 < 20){
+            numRoundsTo20 += 1;
             totalRound += 1;
             winRound += 1;
         }
         else{
-            winningRate = ((double) winRound / numRoundsTo100) * 100;
+            winningRate = ((double) winRound / numRoundsTo20) * 100;
             log.stream.printf("Winning rate: %2.1f\n", winningRate);
             log.stream.flush();
-            numRoundsTo100 = 0;
+            numRoundsTo20 = 0;
             winRound = 0;
         }
     }
@@ -292,7 +292,7 @@ public class myRobotTank extends AdvancedRobot{
     @Override
     public void onDeath(DeathEvent e){
         saveTable();
-        reward -= terminalPenalty;
+        reward = terminalPenalty;
         double[] indexes = new double []{
                 previousMyHp.ordinal(),
                 previousEnemyHp.ordinal(),
@@ -302,16 +302,16 @@ public class myRobotTank extends AdvancedRobot{
         Q = computeQ(reward, onPolicy);
         LUT.setQValue(indexes, Q);
 
-        if(numRoundsTo100 < 100){
-            numRoundsTo100 += 1;
+        if(numRoundsTo20 < 20){
+            numRoundsTo20 += 1;
             totalRound += 1;
         }
         else{
-            winningRate = ((double) winRound / numRoundsTo100) * 100;
+            winningRate = ((double) winRound / numRoundsTo20) * 100;
             System.out.println("Winning rate: " + winningRate);
             log.stream.printf("Winning rate: %2.1f\n", winningRate);
             log.stream.flush();
-            numRoundsTo100 = 0;
+            numRoundsTo20 = 0;
             winRound = 0;
         }
     }
